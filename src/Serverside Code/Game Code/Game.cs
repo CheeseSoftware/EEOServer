@@ -49,7 +49,7 @@ namespace MushroomsUnity3DExample
     }
 
 
-    [RoomType("EEO")]
+    [RoomType("Everybodyedits176")]
     class GameCode : Game<Player>
     {
         string owner = "ostkaka";

@@ -30,17 +30,17 @@ namespace Movement
 
         public SynchronizedObject()
         {
-            this._baseDragX = Config.physics_base_drag;
-            this._baseDragY = Config.physics_base_drag;
-            this._no_modifier_dragX = Config.physics_no_modifier_drag;
-            this._no_modifier_dragY = Config.physics_no_modifier_drag;
-            this._water_drag = Config.physics_water_drag;
-            this._water_buoyancy = Config.physics_water_buoyancy;
-            this._mud_drag = Config.physics_mud_drag;
-            this._mud_buoyancy = Config.physics_mud_buoyancy;
-            this._boost = Config.physics_boost;
-            this._gravity = Config.physics_gravity;
-            this.mult = Config.physics_variable_multiplyer;
+            this._baseDragX = config.physics_base_drag;
+            this._baseDragY = config.physics_base_drag;
+            this._no_modifier_dragX = config.physics_no_modifier_drag;
+            this._no_modifier_dragY = config.physics_no_modifier_drag;
+            this._water_drag = config.physics_water_drag;
+            this._water_buoyancy = config.physics_water_buoyancy;
+            this._mud_drag = config.physics_mud_drag;
+            this._mud_buoyancy = config.physics_mud_buoyancy;
+            this._boost = config.physics_boost;
+            this._gravity = config.physics_gravity;
+            this.mult = config.physics_variable_multiplyer;
             this.last = DateTime.Now;
             return;
         }// end function

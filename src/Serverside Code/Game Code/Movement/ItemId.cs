@@ -1,7 +1,7 @@
 ﻿namespace Movement
 {
 
-    public class ItemId : object
+    public class ItemId
     {
         public const int SWITCH_PURPLE = 113;
         public const int DOOR_PURPLE = 184;
@@ -48,12 +48,12 @@
             return;
         }// end function
 
-        public static bool isSolid(int param1)
+        public bool isSolid(int param1)
         {
             return param1 >= 9 && param1 <= 97 || param1 >= 122 && param1 <= 217;
         }// end function
 
-        public static bool isClimbable(int param1)
+        public bool isClimbable(int param1)
         {
             switch(param1)
             {
@@ -72,12 +72,12 @@
             return false;
         }// end function
 
-        public static bool isBackgroundRotateable(int param1)
+        public bool isBackgroundRotateable(int param1)
         {
             return false;
         }// end function
 
-        public static bool isDecorationRotateable(int param1)
+        public bool isDecorationRotateable(int param1)
         {
             switch(param1)
             {

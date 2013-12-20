@@ -9,6 +9,9 @@ namespace Movement
 
     public class BlObject : BasePlayer
     {
+        protected Config config = new Config();
+        protected ItemId itemId = new ItemId();
+
         public double x = 0;
         public double y = 0;
         public int width = 1;

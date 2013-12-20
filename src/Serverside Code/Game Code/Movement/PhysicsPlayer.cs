@@ -124,8 +124,8 @@ namespace Movement
         private double _maxThrust = 0.2;
         private double _thrustBurnOff = 0.01;
         private double _currentThrust;
-        private static List<string> admins = new List<string> { "benjaminsen", "cyclone", "toby", "rpgmaster2000", "mrshoe", "mrvoid" };
-        public static bool HasSolitude = false;
+        //private static List<string> admins = new List<string> { "benjaminsen", "cyclone", "toby", "rpgmaster2000", "mrshoe", "mrvoid" };
+        //public static bool HasSolitude = false;
 
         int cx = 0;
         int cy = 0;
@@ -167,7 +167,7 @@ namespace Movement
             //this.fireAnimation = new BlSprite(this.fireAura, 0, 0, 26, 26, 6);
             //this.protectionAnimation = new BlSprite(this.invulnerableAura, 0, 0, 26, 26, 24);
             //this.levitationAnimation = new BlSprite(this.levitationAnimaitonBitmapData, 0, 0, 26, 26, 32);
-            this.queue = new Queue<int>(Config.physics_queue_length);
+            this.queue = new Queue<int>(config.physics_queue_length);
             this.lastJump = new DateTime();
             this.lastPortal = new Point();
             this.that = this as SynchronizedObject;
@@ -272,7 +272,7 @@ namespace Movement
                                 {
                                     double _loc_9 = _loc_4;
                                     _loc_11 = room.getBlock(0, (int)(((xx * 16) + this.x + xTest) / 16), (int)(((yy * 16) + this.y + yTest) / 16)).BlockId;
-                                    if (ItemId.isSolid(_loc_11))
+                                    if (itemId.isSolid(_loc_11))
                                     {
                                         switch (_loc_11)
                                         {
@@ -340,7 +340,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.DOOR_PURPLE:
+                                            case -1://itemId.DOOR_PURPLE:
                                                 {
                                                     /*if (this.hidePurple)
                                                     {
@@ -348,7 +348,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.GATE_PURPLE:
+                                            case -2://itemId.GATE_PURPLE:
                                                 {
                                                     /*if (!this.hidePurple)
                                                     {
@@ -356,7 +356,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.DOOR_CLUB:
+                                            case -3://itemId.DOOR_CLUB:
                                                 {
                                                     /*if (this.isclubmember)
                                                     {
@@ -364,7 +364,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.GATE_CLUB:
+                                            case -4://itemId.GATE_CLUB:
                                                 {
                                                     /*if (!this.isclubmember)
                                                     {
@@ -372,7 +372,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.COINDOOR:
+                                            case -5://itemId.COINDOOR:
                                                 {
                                                     /*if (this.getCoinValue(_loc_10, _loc_9) <= this.coins)
                                                     {
@@ -380,7 +380,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.COINGATE:
+                                            case -6://itemId.COINGATE:
                                                 {
                                                     /*if (this.getCoinValue(_loc_10, _loc_9) > this.showCoinGate)
                                                     {
@@ -388,7 +388,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.ZOMBIE_GATE:
+                                            case -7://itemId.ZOMBIE_GATE:
                                                 {
                                                     /*if (this.zombie)
                                                     {
@@ -396,7 +396,7 @@ namespace Movement
                                                     }*/
                                                     break;
                                                 }
-                                            case ItemId.ZOMBIE_DOOR:
+                                            case -8://itemId.ZOMBIE_DOOR:
                                                 {
                                                     /*if (!this.zombie)
                                                     {
@@ -477,7 +477,7 @@ namespace Movement
                     if (_loc_8.Count != 0)
                     {
                         _loc_11 = _loc_8[_loc_10];
-                        if (ItemId.isSolid(_loc_11))
+                        if (itemId.isSolid(_loc_11))
                         {
                             switch(_loc_11)
                             {
@@ -642,7 +642,7 @@ namespace Movement
             int _loc_10 = 0;
             double _loc_11 = 0;
             current = room.getBlock(0, cx, cy).blockId;
-            if (!isgodmod && current == ItemId.WORLD_PORTAL)
+            if (!isgodmod && current == 374/*itemId.WORLD_PORTAL*/)
             {
                 if (spacejustdown && !worldportalsend)
                 {
@@ -803,7 +803,7 @@ namespace Movement
             }
             this.current = room.getBlock(0, cx, cy).blockId;
             this.queue.Enqueue(this.current);
-            if (this.current == 4 || ItemId.isClimbable(this.current))
+            if (this.current == 4 || itemId.isClimbable(this.current))
             {
                 delayed = this.queue.Dequeue();
                 this.queue.Enqueue(this.current);
@@ -857,34 +857,34 @@ namespace Movement
                             this.mory = 0;
                             break;
                         }
-                    case ItemId.SPEED_LEFT:
-                    case ItemId.SPEED_RIGHT:
-                    case ItemId.SPEED_UP:
-                    case ItemId.SPEED_DOWN:
-                    case ItemId.CHAIN:
-                    case ItemId.NINJA_LADDER:
-                    case ItemId.WINE_H:
-                    case ItemId.WINE_V:
+                    case 114://114/*itemId.SPEED_LEFT*/:
+                    case 115://115/*itemId.SPEED_RIGHT*/:
+                    case 116://116/*itemId.SPEED_UP*/:
+                    case 117://117/*itemId.SPEED_DOWN  */:
+                    case 118://itemId.CHAIN:
+                    case 120://itemId.NINJA_LADDER:
+                    case 98://itemId.WINE_H:
+                    case 99://itemId.WINE_V:
                     case 4:
                         {
                             this.morx = 0;
                             this.mory = 0;
                             break;
                         }
-                    case ItemId.WATER:
+                    case 119://119/*itemId.WATER*/:
                         {
                             this.morx = 0;
                             this.mory = (int)_water_buoyancy;
                             break;
                         }
-                    case ItemId.MUD:
+                    case 369://369/*itemId.MUD*/:
                         {
                             this.morx = 0;
                             this.mory = (int)_mud_buoyancy;
                             break;
                         }
-                    case ItemId.FIRE:
-                    case ItemId.SPIKE:
+                    case 368://itemId.FIRE:
+                    case 361://itemId.SPIKE:
                         {
                             if (!this.isDead && !this._isInvulnerable)
                             {
@@ -919,27 +919,28 @@ namespace Movement
                             this.moy = 0;
                             break;
                         }
-                    case ItemId.SPEED_LEFT:
-                    case ItemId.SPEED_RIGHT:
-                    case ItemId.SPEED_UP:
-                    case ItemId.SPEED_DOWN:
-                    case ItemId.CHAIN:
-                    case ItemId.NINJA_LADDER:
-                    case ItemId.WINE_H:
-                    case ItemId.WINE_V:
+
+                    case 114://114/*itemId.SPEED_LEFT*/:
+                    case 115://115/*itemId.SPEED_RIGHT*/:
+                    case 116://116/*itemId.SPEED_UP*/:
+                    case 117://117/*itemId.SPEED_DOWN  */:
+                    case 118://itemId.CHAIN:
+                    case 120://itemId.NINJA_LADDER:
+                    case 98://itemId.WINE_H:
+                    case 99://itemId.WINE_V:
                     case 4:
                         {
                             this.mox = 0;
                             this.moy = 0;
                             break;
                         }
-                    case ItemId.WATER:
+                    case 119://119/*itemId.WATER*/:
                         {
                             this.mox = 0;
                             this.moy = _water_buoyancy;
                             break;
                         }
-                    case ItemId.MUD:
+                    case 369://369/*itemId.MUD*/:
                         {
                             this.mox = 0;
                             this.moy = _mud_buoyancy;
@@ -982,16 +983,16 @@ namespace Movement
             if (_speedX != 0 || _modifierX != 0)
             {
                 _speedX = _speedX + _modifierX;
-                _speedX = _speedX * Config.physics_base_drag;
-                if (mx == 0 && moy != 0 || _speedX < 0 && mx > 0 || _speedX > 0 && mx < 0 || ItemId.isClimbable(this.current) && !isgodmod)
+                _speedX = _speedX * config.physics_base_drag;
+                if (mx == 0 && moy != 0 || _speedX < 0 && mx > 0 || _speedX > 0 && mx < 0 || itemId.isClimbable(this.current) && !isgodmod)
                 {
                     _speedX = _speedX * _no_modifier_dragX;
                 }
-                else if (this.current == ItemId.WATER && !isgodmod)
+                else if (this.current == 119/*itemId.WATER*/ && !isgodmod)
                 {
                     _speedX = _speedX * _water_drag;
                 }
-                else if (this.current == ItemId.MUD && !isgodmod)
+                else if (this.current == 369/*itemId.MUD*/ && !isgodmod)
                 {
                     _speedX = _speedX * this.dragMud();
                 }
@@ -1011,16 +1012,16 @@ namespace Movement
             if (_speedY != 0 || _modifierY != 0)
             {
                 _speedY = _speedY + _modifierY;
-                _speedY = _speedY * Config.physics_base_drag;
-                if (my == 0 && mox != 0 || _speedY < 0 && my > 0 || _speedY > 0 && my < 0 || ItemId.isClimbable(this.current) && !isgodmod)
+                _speedY = _speedY * config.physics_base_drag;
+                if (my == 0 && mox != 0 || _speedY < 0 && my > 0 || _speedY > 0 && my < 0 || itemId.isClimbable(this.current) && !isgodmod)
                 {
                     _speedY = _speedY * _no_modifier_dragY;
                 }
-                else if (this.current == ItemId.WATER && !isgodmod)
+                else if (this.current == 119/*itemId.WATER*/ && !isgodmod)
                 {
                     _speedY = _speedY * _water_drag;
                 }
-                else if (this.current == ItemId.MUD && !isgodmod)
+                else if (this.current == 369/*itemId.MUD*/ && !isgodmod)
                 {
                     _speedY = _speedY * this.dragMud();
                 }
@@ -1041,22 +1042,22 @@ namespace Movement
             {
                 switch (this.current)
                 {
-                    case ItemId.SPEED_LEFT:
+                    case 114/*itemId.SPEED_LEFT*/:
                         {
                             _speedX = -_boost;
                             break;
                         }
-                    case ItemId.SPEED_RIGHT:
+                    case 115/*itemId.SPEED_RIGHT*/:
                         {
                             _speedX = _boost;
                             break;
                         }
-                    case ItemId.SPEED_UP:
+                    case 116/*itemId.SPEED_UP*/:
                         {
                             _speedY = -_boost;
                             break;
                         }
-                    case ItemId.SPEED_DOWN:
+                    case 117/*itemId.SPEED_DOWN  */:
                         {
                             _speedY = _boost;
                             break;
@@ -1129,13 +1130,13 @@ namespace Movement
                 {
                     if (this.speedX == 0 && this.morx && this.mox && this.x % 16 == 0)
                     {
-                        this.speedX = this.speedX - this.morx * Config.physics_jump_height * this.jumpMultiplier;
+                        this.speedX = this.speedX - this.morx * config.physics_jump_height * this.jumpMultiplier;
                         this.changed = true;
                         this.lastJump = new Date().time * mod;
                     }
                     if (this.speedY == 0 && this.mory && this.moy && this.y % 16 == 0)
                     {
-                        this.speedY = this.speedY - this.mory * Config.physics_jump_height * this.jumpMultiplier;
+                        this.speedY = this.speedY - this.mory * config.physics_jump_height * this.jumpMultiplier;
                         this.changed = true;
                         this.lastJump = new Date().time * mod;
                     }
@@ -1203,7 +1204,7 @@ namespace Movement
                             this.state.showBlue();
                             break;
                         }
-                        case ItemId.SWITCH_PURPLE:
+                        case itemId.SWITCH_PURPLE:
                         {
                             this.purple = !this.purple;
                             if (!this.purple)
@@ -1241,17 +1242,17 @@ namespace Movement
                             }
                             break;
                         }
-                        case ItemId.DIAMOND:
+                        case itemId.DIAMOND:
                         {
                             this.connection.send("diamondtouch", cx, cy);
                             break;
                         }
-                        case ItemId.CAKE:
+                        case itemId.CAKE:
                         {
                             this.connection.send("caketouch", cx, cy);
                             break;
                         }
-                        case ItemId.CHECKPOINT:
+                        case itemId.CHECKPOINT:
                         {
                             if (!isgodmod)
                             {
@@ -1261,7 +1262,7 @@ namespace Movement
                             }
                             break;
                         }
-                        case ItemId.BRICK_COMPLETE:
+                        case itemId.BRICK_COMPLETE:
                         {
                             if (!isgodmod)
                             {
@@ -1307,7 +1308,7 @@ namespace Movement
             var imx = _speedX * 256;
             var imy = _speedY * 256;
             moving = false;
-            if (imx != 0 || this.current == ItemId.WATER || this.current == ItemId.MUD)
+            if (imx != 0 || this.current == 119/*itemId.WATER*/ || this.current == 369/*itemId.MUD*/)
             {
                 moving = true;
             }
@@ -1339,7 +1340,7 @@ namespace Movement
                     }
                 }
             }
-            if (imy != 0 || this.current == ItemId.WATER || this.current == ItemId.MUD)
+            if (imy != 0 || this.current == 119/*itemId.WATER*/ || this.current == 369/*itemId.MUD*/)
             {
                 moving = true;
             }
@@ -1864,11 +1865,11 @@ namespace Movement
         {
             if (this.mory != 0)
             {
-                this.speedY = this.speedY - this._currentThrust * (Config.physics_jump_height / 2) * (this.mory * 0.5);
+                this.speedY = this.speedY - this._currentThrust * (config.physics_jump_height / 2) * (this.mory * 0.5);
             }
             if (this.morx != 0)
             {
-                this.speedX = this.speedX - this._currentThrust * (Config.physics_jump_height / 2) * (this.morx * 0.5);
+                this.speedX = this.speedX - this._currentThrust * (config.physics_jump_height / 2) * (this.morx * 0.5);
             }
             if (!this._isThrusting)
             {
@@ -1912,10 +1913,10 @@ namespace Movement
             return;
         }// end function
 
-        public static bool isAdmin(string param1)
+        /*public bool isAdmin(string param1)
         {
             return admins.Contains(param1);
-        }// end function
+        }*/// end function
 
     }
 }
