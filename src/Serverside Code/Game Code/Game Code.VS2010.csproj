@@ -49,6 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Game.cs" />
+    <Compile Include="Movement\BlObject.cs" />
+    <Compile Include="Movement\Config.cs" />
+    <Compile Include="Movement\ItemId.cs" />
+    <Compile Include="Movement\PhysicsPlayer.cs" />
+    <Compile Include="Movement\SynchronizedObject.cs" />
+    <Compile Include="Movement\SynchronizedSprite.cs" />
     <Compile Include="Player.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -7,14 +7,23 @@ using System.Drawing;
 
 namespace MushroomsUnity3DExample
 {
-    class Room
+    public class Room
     {
-        internal void DrawBlock(Block block)
+        public void DrawBlock(Block block)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public Block getBlock(int p1, int p2, int p3)
         {
             throw new NotImplementedException();
         }
     }
-    class Block
+    public class Block
     {
         private Message message;
 
@@ -23,6 +32,19 @@ namespace MushroomsUnity3DExample
             // TODO: Complete member initialization
             this.message = message;
         }
+
+        public int BlockId { get; set; }
+
+        internal bool isPortal()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int blockId { get; set; }
+
+        public int pt_target { get; set; }
+
+        public int pt_rotation { get; set; }
     }
 
 
