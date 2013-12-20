@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections;
 using PlayerIO.GameLibrary;
 using System.Drawing;
+using Movement;
 
 namespace MushroomsUnity3DExample
 {
@@ -57,6 +58,9 @@ namespace MushroomsUnity3DExample
         public override void GameStarted()
         {
             Console.WriteLine("Game is started: " + RoomId);
+
+            this.AddTimer(new Action(()=>OnPlayerUpdate(room)), 100);
+
             base.GameStarted();
         }
 
@@ -195,6 +199,13 @@ namespace MushroomsUnity3DExample
             }
         }
 
+        private void OnPlayerUpdate(Room room)
+        {
+            foreach (Movement.PhysicsPlayer p in Players)
+            {
+                p.tick(room);
+            }
+        }
     }
 }
 

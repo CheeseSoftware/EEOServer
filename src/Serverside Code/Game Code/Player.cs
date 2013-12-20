@@ -6,12 +6,12 @@ using PlayerIO.GameLibrary;
 
 namespace MushroomsUnity3DExample
 {
-    class Player : BasePlayer
+    public class Player : Movement.PhysicsPlayer
     {
         string name;
 
         public Player()
-            : base()
+            : base(0, "", 0, 16, 16, false, false, false, 0, false, false, 0)
         {
         }
 
