@@ -48,6 +48,26 @@ namespace MushroomsUnity3DExample
         public int pt_rotation { get; set; }
     }
 
+    [RoomType("Lobby176")]
+    class LobbyCode : Game<Player> { }
+
+    [RoomType("Beta176")]
+    class BetaCode : Game<Player> { }
+
+    [RoomType("LobbyGuest176")]
+    class LobbyGuestCode : Game<Player> { }
+
+    [RoomType("Auth176")]
+    class AuthCode : Game<Player> { }
+
+    [RoomType("QuickInviteHandler176")]
+    class QuickInviteHandlerCode : Game<Player> { }
+
+    [RoomType("Tutorial176")]
+    class TutorialCode : Game<Player> { }
+
+    [RoomType("Tracking176")]
+    class TrackingCode : Game<Player> { }
 
     [RoomType("Everybodyedits176")]
     class GameCode : Game<Player>
@@ -59,7 +79,7 @@ namespace MushroomsUnity3DExample
         {
             Console.WriteLine("Game is started: " + RoomId);
 
-            this.AddTimer(new Action(()=>OnPlayerUpdate(room)), 100);
+            this.AddTimer(new Action(() => OnPlayerUpdate(room)), 100);
 
             base.GameStarted();
         }
