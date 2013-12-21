@@ -129,10 +129,10 @@ namespace MushroomsUnity3DExample
                                     (double)16.0);    // y
 
                                 player.Send("add",
-                                    player.ConnectUserId,
-                                    (int)player.Face,     // faceid
-                                    (double)player.x,     // x
-                                    (double)player.y);    // y
+                                    p.ConnectUserId,
+                                    (int)p.Face,     // faceid
+                                    (double)p.x,     // x
+                                    (double)p.y);    // y
                             }
                         }
 
