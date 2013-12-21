@@ -49,25 +49,25 @@ namespace MushroomsUnity3DExample
     }
 
     [RoomType("Lobby176")]
-    class LobbyCode : Game<Player> { }
+    class LobbyCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("Beta176")]
-    class BetaCode : Game<Player> { }
+    class BetaCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("LobbyGuest176")]
-    class LobbyGuestCode : Game<Player> { }
+    class LobbyGuestCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("Auth176")]
-    class AuthCode : Game<Player> { }
+    class AuthCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("QuickInviteHandler176")]
-    class QuickInviteHandlerCode : Game<Player> { }
+    class QuickInviteHandlerCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("Tutorial176")]
-    class TutorialCode : Game<Player> { }
+    class TutorialCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("Tracking176")]
-    class TrackingCode : Game<Player> { }
+    class TrackingCode : Game<Player> { public override void GotMessage(Player player, Message message) { throw new Exception(message.ToString()); } }
 
     [RoomType("Everybodyedits176")]
     class GameCode : Game<Player>
@@ -217,6 +217,8 @@ namespace MushroomsUnity3DExample
                     return;
 
             }
+
+            throw new Exception(message.ToString());
         }
 
         private void OnPlayerUpdate(Room room)

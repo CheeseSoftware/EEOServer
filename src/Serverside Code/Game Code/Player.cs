@@ -8,11 +8,14 @@ namespace MushroomsUnity3DExample
 {
     public class Player : Movement.PhysicsPlayer
     {
-        string name;
+        string name = "";
+        int face = 0;
+        bool hasCode = false;
 
         public Player()
             : base(0, "", 0, 16, 16, false, false, false, 0, false, false, 0)
         {
+            //face = 0;
         }
 
         //public Player(Message m)
@@ -23,12 +26,16 @@ namespace MushroomsUnity3DExample
             get { return this.name; }
         }
 
-        public object X { get; set; }
+        public double X { get { return this.x; } set { this.x = value; } }
 
-        public object Y { get; set; }
+        public double Y { get { return this.x;} set { this.y = value;} }
 
-        public bool HasAccess { get; set; }
+        public bool HasAccess { get { return false; } set { ;} }
 
         public bool IsMod { get; set; }
+
+        public int Face { get { return this.face; } set { this.face = value;} }
+
+        public bool HasCode { get { return hasCode; } set { hasCode = value; } }
     }
 }

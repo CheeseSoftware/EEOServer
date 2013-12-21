@@ -48,6 +48,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EE070.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Movement\BlObject.cs" />
     <Compile Include="Movement\Config.cs" />
