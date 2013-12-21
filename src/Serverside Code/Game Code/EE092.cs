@@ -58,7 +58,7 @@ namespace MushroomsUnity3DExample
                             7, //gems
 
 
-                            "christmas2010",    // string id
+                            "XMAS decorations",    // string id
                             100,                // int energy cost
                             "25",               // string cost per click
                             "0",                // string energy used
@@ -79,6 +79,8 @@ namespace MushroomsUnity3DExample
     {
         string owner = "ostkaka";
         Room room = new Room();
+
+        List<string> modList = new List<string>(new string[] { "ostkaka", "gustav9797" });
 
         int[,] blocks = new int[200, 200];
 
@@ -131,7 +133,7 @@ namespace MushroomsUnity3DExample
 
         public override void UserJoined(Player player)
         {
-            object[] world = new object[200 * 200 + 2];
+            /*object[] world = new object[200 * 200 + 2];
 
             world[0] = (int)0;
             world[1] = (int)0;
@@ -142,9 +144,31 @@ namespace MushroomsUnity3DExample
                 {
                     world[y * 200 + x + 2] = blocks[x, y];
                 }
+            }*/
+
+            player.name = player.PlayerObject.GetString("name");
+            player.IsMod = modList.Contains(player.name);
+
+            if (this.RoomData.ContainsKey("editkey") && !player.IsMod && player.name != owner)
+            {
+                if (this.RoomData["editkey"].Split('#').First() == "")
+                {
+                    player.HasCode = true;
+                    player.Send("access");
+                }
+            }
+            else
+            {
+                player.HasCode = true;
+                player.Send("access");
             }
 
-            player.Send("init", world);
+            player.Send("init",
+                "o", //"b" in rot13
+                player.ConnectUserId,
+                player.x, player.y, player.name,
+                player.HasCode, (player.name == owner),
+                200, 200);
 
             base.UserJoined(player);
         }
@@ -186,37 +210,35 @@ namespace MushroomsUnity3DExample
                             }
                         }*/
 
+                        player.Send("info", "something room", owner);
+
                         foreach (Player p in Players)
                         {
                             if (p.ConnectUserId != player.ConnectUserId)
                             {
                                 p.Send("add",
                                     player.ConnectUserId,
+                                    player.name,
                                     (int)0,     // faceid
                                     (double)16.0,     // x
-                                    (double)16.0);    // y
+                                    (double)16.0,
+                                    player.isgod,
+                                    player.ismod,
+                                    0);    // y
 
                                 player.Send("add",
                                     p.ConnectUserId,
+                                    p.name,
                                     (int)p.Face,     // faceid
                                     (double)p.x,     // x
-                                    (double)p.y);    // y
+                                    (double)p.y,
+                                    p.isgod,
+                                    p.ismod,
+                                    0);    // y
                             }
                         }
 
-                        if (this.RoomData.ContainsKey("editkey"))
-                        {
-                            if (this.RoomData["editkey"].Split('#').First() == "")
-                            {
-                                player.HasCode = true;
-                                player.Send("access");
-                            }
-                        }
-                        else
-                        {
-                            player.HasCode = true;
-                            player.Send("access");
-                        }
+
                     }
                     return;
 
@@ -228,7 +250,7 @@ namespace MushroomsUnity3DExample
                     Broadcast("face", player.ConnectUserId, message.GetInt(0));
                     return;
 
-                case "u":   //movement
+                case "m":   //movement
                     Broadcast("u",
                         player.ConnectUserId,
                         message.GetDouble(0),    //x
@@ -245,7 +267,7 @@ namespace MushroomsUnity3DExample
 
                     return;
 
-                case "c": //block
+                case "b": //block
                     {
                         if (player.HasCode)
                         {
@@ -323,8 +345,8 @@ namespace MushroomsUnity3DExample
                     this.Broadcast(Message.Create("write", "World", player.Name + " completed the level!"));
                     return;
 
-                case "m":   // <double x> <double y> <double speedX> <double speedY> <Integer ModifierY> <Integer Horizontal> <Integer Vertical> <Double GravityMultiplier> <Boolean SpaceDown>
-                    return;
+                //case "m":   // <double x> <double y> <double speedX> <double speedY> <Integer ModifierY> <Integer Horizontal> <Integer Vertical> <Double GravityMultiplier> <Boolean SpaceDown>
+                //    return;
 
             }
 
