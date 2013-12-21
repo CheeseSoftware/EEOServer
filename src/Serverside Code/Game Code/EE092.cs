@@ -210,7 +210,8 @@ namespace MushroomsUnity3DExample
                             }
                         }*/
 
-                        player.Send("info", "something room", owner);
+                        for (int i = 0; i < 10; i++)
+                            player.Send("info", i.ToString(), "You can't join the world because you don't even exist!");
 
                         foreach (Player p in Players)
                         {
