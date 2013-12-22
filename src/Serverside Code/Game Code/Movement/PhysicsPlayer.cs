@@ -32,7 +32,6 @@ namespace Movement
         protected var ModAura:Class;
         protected var FireAura:Class;
         protected var LevitationEffect:Class;*/
-        private int _id;
         //protected var ding:Sound;
         //private var world:World;
         public bool isme;
@@ -189,18 +188,6 @@ namespace Movement
             width = 16;
             height = 16;
             return;
-        }// end function
-
-        public int id
-        {
-            get
-            {
-                return this._id;
-            }
-            set
-            {
-                this._id = value;
-            }
         }// end function
 
         public double jumpMultiplier()
