@@ -109,20 +109,30 @@ namespace MushroomsUnity3DExample
         public override void UserJoined(Player player)
         {
             if (owner == "")
+            {
                 owner = player.ConnectUserId;
+                player.HasCode = true;
+            }
+            else if (owner == player.ConnectUserId)
+            {
+                player.HasCode = true;
+            }
 
             object[] messageData = new object[200 * 200 + 2];
 
-            if (this.RoomData.ContainsKey("editkey"))
+            if (!player.HasCode)
             {
-                if (this.RoomData["editkey"].Split('/').First() == "")
+                if (this.RoomData.ContainsKey("editkey"))
+                {
+                    if (this.RoomData["editkey"].Split('/').First() == "")
+                    {
+                        player.HasCode = true;
+                    }
+                }
+                else
                 {
                     player.HasCode = true;
                 }
-            }
-            else
-            {
-                player.HasCode = true;
             }
 
             messageData[0] = player.Id;
