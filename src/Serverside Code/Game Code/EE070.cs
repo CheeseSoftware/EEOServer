@@ -24,8 +24,6 @@ namespace MushroomsUnity3DExample
         {
             //all arguments
             string[] arguments;
-            //current arguments
-            string[] args;
 
             if (this.RoomData.ContainsKey("editkey"))
             {
@@ -38,9 +36,9 @@ namespace MushroomsUnity3DExample
                     if (argument == arguments[0])
                         continue;
 
-                    args = argument.Split(' ');
+                    //args = 
 
-                    HandleCommand(Players.First(), args);
+                    HandleCommand(null, argument.Split(' '));
                 }
             }
         }
@@ -72,7 +70,15 @@ namespace MushroomsUnity3DExample
         {
             Console.WriteLine("Game is started: " + RoomId);
 
-            HandleCodeArguemnts();
+            Exception exception = null;
+            try
+            {
+                HandleCodeArguemnts();
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
 
             for (int y = 0; y < 200; y++)
             {
@@ -90,6 +96,9 @@ namespace MushroomsUnity3DExample
             //this.AddTimer(new Action(() => OnPlayerUpdate(room)), 100);
 
             base.GameStarted();
+
+            if (exception != null)
+                throw exception;
         }
 
         public override void GameClosed()
@@ -106,7 +115,7 @@ namespace MushroomsUnity3DExample
 
             if (this.RoomData.ContainsKey("editkey"))
             {
-                if (this.RoomData["editkey"].Split('#').First() == "")
+                if (this.RoomData["editkey"].Split('/').First() == "")
                 {
                     player.HasCode = true;
                 }
@@ -216,7 +225,8 @@ namespace MushroomsUnity3DExample
 
 
                             if ((x >= 0 && y >= 0 && x <= 199 && y <= 199)
-                                && ((x != 0 && x != 199 && y != 0 && y != 199) || (blockId >= 9 && blockId <= 15)))
+                                && ((x != 0 && x != 199 && y != 0 && y != 199) || (blockId >= 9 && blockId <= 15))
+                                && blockId != blocks[x,y])
                             {
                                 blocks[x, y] = blockId;
                                 Broadcast("c", x, y, blockId);
