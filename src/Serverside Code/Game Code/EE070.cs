@@ -9,45 +9,81 @@ namespace MushroomsUnity3DExample
     [RoomType("FlixelWalkerFX3")]
     class EE070 : Game<Player>
     {
-        string owner = "ostkaka";
+        string owner = "";
         Room room = new Room();
 
         int[,] blocks = new int[200, 200];
+
+        string editCode = "";
+        int fillBlock = 0;
+        int borderBlock = 9;
+        int width = 200;
+        int height = 200;
+
+        private void HandleCodeArguemnts()
+        {
+            //all arguments
+            string[] arguments;
+            //current arguments
+            string[] args;
+
+            if (this.RoomData.ContainsKey("editkey"))
+            {
+                arguments = this.RoomData["editkey"].Split('/');
+
+                this.editCode = arguments[0];
+
+                foreach (string argument in arguments)
+                {
+                    if (argument == arguments[0])
+                        continue;
+
+                    args = argument.Split(' ');
+
+                    HandleCommand(Players.First(), args);
+                }
+            }
+        }
+
+        private void HandleCommand(Player player, string[] args)
+        {
+            switch (args[0])
+            {
+                case "fill":
+                    if (args.Count() >= 2)
+                    {
+                        int.TryParse(args[1], out this.fillBlock);
+                    }
+                    break;
+
+                case "border":
+                    if (args.Count() >= 2)
+                    {
+                        int.TryParse(args[1], out this.borderBlock);
+
+                        if (this.borderBlock < 9 || this.borderBlock > 15)
+                            this.borderBlock = 9;
+                    }
+                    break;
+            }
+        }
 
         public override void GameStarted()
         {
             Console.WriteLine("Game is started: " + RoomId);
 
-            int block = 0;
-            int border = 9;
-
-            if (this.RoomData.ContainsKey("editkey"))
-            {
-                string[] roomdata = this.RoomData["editkey"].Split('#');
-
-                if (roomdata.Count() >= 2)
-                {
-                    int.TryParse(roomdata[1], out block);
-                }
-                if (roomdata.Count() >= 3)
-                {
-                    int.TryParse(roomdata[2], out border);
-
-                    if (border < 9 || border > 15)
-                        border = 9;
-                }
-            }
+            HandleCodeArguemnts();
 
             for (int y = 0; y < 200; y++)
             {
                 for (int x = 0; x < 200; x++)
                 {
                     if (x == 0 || x == 199 || y == 0 || y == 199)
-                        blocks[x, y] = (int)border;
+                        blocks[x, y] = (int)this.borderBlock;
                     else if (x <= 2 && y <= 2)
                         blocks[x, y] = 0;
                     else
-                        blocks[x, y] = (int)block;
+                        blocks[x, y] = (int)this.fillBlock;
                 }
             }
 
@@ -63,6 +99,9 @@ namespace MushroomsUnity3DExample
 
         public override void UserJoined(Player player)
         {
+            if (owner == "")
+                owner = player.ConnectUserId;
+
             object[] messageData = new object[200 * 200 + 2];
 
             if (this.RoomData.ContainsKey("editkey"))
@@ -230,13 +269,10 @@ namespace MushroomsUnity3DExample
                 //    return;
 
                 case "access":  // <string code>
-                    if (this.RoomData.ContainsKey("editkey"))
+                    if (this.editCode == message.GetString(0))
                     {
-                        if (this.RoomData["editkey"].Split('#').First() == message.GetString(0))
-                        {
-                            player.HasCode = true;
-                            player.Send("access");
-                        }
+                        player.HasCode = true;
+                        player.Send("access");
                     }
                     return;
 
