@@ -462,14 +462,14 @@ namespace Movement
                 }
             }
 
-            //_loc_11 = Form1.blockMap[_loc_3, _loc_4].ID;
+            //_loc_11 = Form1.blockMap[_loc_3, _loc_4].Id;
             /*while (_loc_9 < _loc_6)
             {
 
                 _loc_8.Clear();
                 for (int i = 0; i < Form1.worldSize.X; i++)
                 {
-                    _loc_8.Add(Form1.blockMap[i, _loc_9].ID);
+                    _loc_8.Add(Form1.blockMap[i, _loc_9].Id);
                 }
                 _loc_10 = _loc_3;
                 while (_loc_10 < _loc_5)
@@ -664,7 +664,7 @@ namespace Movement
                 {
                     lastPortal = new Point(cx << 4, cy << 4);
 
-                    //current = Form1.blockMap[cx, cy].ID;
+                    //current = Form1.blockMap[cx, cy].Id;
                     Block currentBlock = room.getBlock(0, cx, cy);
                     int currentTarget = currentBlock.pt_target;
                     //Console.WriteLine("entered portal with id " + currentBlock.thisID + " and target id " + currentTarget + " and rotation " + currentBlock.rotation);

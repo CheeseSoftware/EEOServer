@@ -12,6 +12,7 @@ namespace MushroomsUnity3DExample
     {
         Regex regex = new Regex("^[a-zA-Z0-9]*$");
 
+
         public override void GameStarted()
         {
             PreloadPlayerObjects = true;
@@ -79,7 +80,6 @@ namespace MushroomsUnity3DExample
     {
         string owner = "ostkaka";
         Room room = new Room();
-
         List<string> modList = new List<string>(new string[] { "ostkaka", "gustav9797" });
 
         int[,] blocks = new int[200, 200];
@@ -133,19 +133,6 @@ namespace MushroomsUnity3DExample
 
         public override void UserJoined(Player player)
         {
-            /*object[] world = new object[200 * 200 + 2];
-
-            world[0] = (int)0;
-            world[1] = (int)0;
-
-            for (int y = 0; y < 200; y++)
-            {
-                for (int x = 0; x < 200; x++)
-                {
-                    world[y * 200 + x + 2] = blocks[x, y];
-                }
-            }*/
-
             player.name = player.PlayerObject.GetString("name");
             player.IsMod = modList.Contains(player.name);
 
@@ -165,7 +152,7 @@ namespace MushroomsUnity3DExample
 
             player.Send("init",
                 "o", //"b" in rot13
-                player.ConnectUserId,
+                player.Id,
                 player.x, player.y, player.name,
                 player.HasCode, (player.name == owner),
                 200, 200);
@@ -175,7 +162,7 @@ namespace MushroomsUnity3DExample
 
         public override void UserLeft(Player player)
         {
-            Broadcast("left", player.ConnectUserId);
+            Broadcast("left", player.Id);
 
             base.UserLeft(player);
         }
@@ -203,10 +190,10 @@ namespace MushroomsUnity3DExample
                     {
                         /*foreach (Player p in Players)
                         {
-                            if (p.ConnectUserId != player.ConnectUserId)
+                            if (p.Id != player.Id)
                             {
-                                p.Send("add", player.ConnectUserId, player.X, player.Y);
-                                player.Send("add", p.ConnectUserId, p.X, p.Y);
+                                p.Send("add", player.Id, player.X, player.Y);
+                                player.Send("add", p.Id, p.X, p.Y);
                             }
                         }*/
 
@@ -215,20 +202,19 @@ namespace MushroomsUnity3DExample
 
                         foreach (Player p in Players)
                         {
-                            if (p.ConnectUserId != player.ConnectUserId)
+                            if (p.Id != player.Id)
                             {
                                 p.Send("add",
-                                    player.ConnectUserId,
+                                    player.Id,
                                     player.name,
                                     (int)0,     // faceid
                                     (double)16.0,     // x
                                     (double)16.0,
                                     player.isgod,
-                                    player.ismod,
                                     0);    // y
 
                                 player.Send("add",
-                                    p.ConnectUserId,
+                                    p.Id,
                                     p.name,
                                     (int)p.Face,     // faceid
                                     (double)p.x,     // x
@@ -248,12 +234,12 @@ namespace MushroomsUnity3DExample
 
                 case "face":
                     player.Face = message.GetInt(0);
-                    Broadcast("face", player.ConnectUserId, message.GetInt(0));
+                    Broadcast("face", player.Id, message.GetInt(0));
                     return;
 
                 case "m":   //movement
                     Broadcast("u",
-                        player.ConnectUserId,
+                        player.Id,
                         message.GetDouble(0),    //x
                         message.GetDouble(1),    //y
                         message.GetDouble(2),    //xspeed
@@ -304,7 +290,7 @@ namespace MushroomsUnity3DExample
                     return;
 
                 case "k":   // crown
-                    Broadcast("k", player.ConnectUserId);
+                    Broadcast("k", player.Id);
                     return;
 
                 case "f":    // face <int id>

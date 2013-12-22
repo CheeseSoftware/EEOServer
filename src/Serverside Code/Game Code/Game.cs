@@ -98,7 +98,7 @@ namespace MushroomsUnity3DExample
 
         public override void UserLeft(Player player)
         {
-            Broadcast("left", player.ConnectUserId);
+            Broadcast("left", player.Id);
 
             base.UserLeft(player);
         }
@@ -126,10 +126,10 @@ namespace MushroomsUnity3DExample
                     {
                         foreach (Player p in Players)
                         {
-                            if (p.ConnectUserId != player.ConnectUserId)
+                            if (p.Id != player.Id)
                             {
-                                p.Send("add", player.ConnectUserId, player.X, player.Y);
-                                player.Send("add", p.ConnectUserId, p.X, p.Y);
+                                p.Send("add", player.Id, player.X, player.Y);
+                                player.Send("add", p.Id, p.X, p.Y);
                             }
                         }
                     }
