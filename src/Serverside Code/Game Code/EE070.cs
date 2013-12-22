@@ -113,10 +113,6 @@ namespace MushroomsUnity3DExample
                 owner = player.ConnectUserId;
                 player.HasCode = true;
             }
-            else if (owner == player.ConnectUserId)
-            {
-                player.HasCode = true;
-            }
 
             object[] messageData = new object[200 * 200 + 2];
 
@@ -203,8 +199,11 @@ namespace MushroomsUnity3DExample
                     return;
 
                 case "face":
-                    player.Face = message.GetInt(0);
-                    Broadcast("face", player.Id, message.GetInt(0));
+                    if (player.Face != message.GetInt(0))
+                    {
+                        player.Face = message.GetInt(0);
+                        Broadcast("face", player.Id, message.GetInt(0));
+                    }
                     return;
 
                 case "u":   //movement
@@ -261,7 +260,18 @@ namespace MushroomsUnity3DExample
                     return;
 
                 case "k":   // crown
-                    Broadcast("k", player.Id);
+                    if (!player.hascrown)
+                    {
+                        player.hascrown = true;
+                        Broadcast("k", player.Id);
+                        foreach (Player p in Players)
+                        {
+                            if (p.Id != player.Id)
+                            {
+                                p.hascrown = false;
+                            }
+                        }
+                    }
                     return;
 
                 case "f":    // face <int id>
@@ -289,10 +299,13 @@ namespace MushroomsUnity3DExample
                 //    return;
 
                 case "access":  // <string code>
-                    if (this.editCode == message.GetString(0))
+                    if (!player.HasCode)
                     {
-                        player.HasCode = true;
-                        player.Send("access");
+                        if (this.editCode == message.GetString(0))
+                        {
+                            player.HasCode = true;
+                            player.Send("access");
+                        }
                     }
                     return;
 
