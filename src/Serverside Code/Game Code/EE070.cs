@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using PlayerIO.GameLibrary;
 
 namespace MushroomsUnity3DExample
@@ -19,6 +20,8 @@ namespace MushroomsUnity3DExample
         int borderBlock = 9;
         int width = 200;
         int height = 200;
+
+        Dictionary<System.DateTime, System.Action> timers = new Dictionary<System.DateTime, System.Action>();
 
         private void HandleCodeArguemnts()
         {
@@ -80,6 +83,11 @@ namespace MushroomsUnity3DExample
                 exception = e;
             }
 
+            if (editCode != "")
+            {
+                this.RoomData.Add("needskey", "true");
+            }
+
             for (int y = 0; y < 200; y++)
             {
                 for (int x = 0; x < 200; x++)
@@ -94,6 +102,7 @@ namespace MushroomsUnity3DExample
             }
 
             //this.AddTimer(new Action(() => OnPlayerUpdate(room)), 100);
+            this.AddTimer(new Action(() => OnTimerUpdate()), 100);
 
             base.GameStarted();
 
@@ -244,19 +253,24 @@ namespace MushroomsUnity3DExample
                     }
                     return;
 
-                case "red":
-                case "green":
-                case "blue":
                 case "hide":
-                    Broadcast(message);
+                    if (message.Count >= 2)
+                    {
+                        string color = message.GetString(1);
+
+                        Broadcast("hide", color);
+
+                        lock (timers)
+                        {
+                            timers.Add(DateTime.Now.AddSeconds(5), new Action(() =>
+                            {
+                                Broadcast("show", color);
+                            }));
+                        }
+                    }
                     return;
 
                 case "say":
-                    return;
-
-                case "rk":  // red key
-                case "gk":  // green key
-                case "bk":  // blue key
                     return;
 
                 case "k":   // crown
@@ -327,6 +341,28 @@ namespace MushroomsUnity3DExample
             {
                 p.tick(room);
             }
+        }
+
+        public void OnTimerUpdate()
+        {
+            List<Action> tasks = new List<Action>();
+
+            lock (timers)
+            {
+                List<DateTime> keys = new List<DateTime>(timers.Keys);
+
+                foreach(var time in keys)
+                {
+                    if (DateTime.Compare(time, DateTime.Now) <= 0)
+                    {
+                        tasks.Add(timers[time]);
+                        timers.Remove(time);
+                    }
+                }
+            }
+
+            foreach (var t in tasks)
+                t();
         }
     }
 }
