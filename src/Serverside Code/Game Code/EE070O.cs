@@ -18,6 +18,15 @@ namespace MushroomsUnity3DExample
             PreloadPlayerObjects = true;
         }
 
+        public override bool AllowUserJoin(Player player)
+        {
+            //kolla om den är bannad
+            if (player.PlayerObject.Contains("banned"))
+            {
+                return !player.PlayerObject.GetBool("banned");
+            }
+            return base.AllowUserJoin(player);
+        }
 
         public override void GotMessage(Player player, Message message)
         {
@@ -76,33 +85,27 @@ namespace MushroomsUnity3DExample
     }
 
     [RoomType("EE070O")]
-    class EE070O: Game<Player>
+    class EE070O : Game<Player>
     {
         string owner = "";
         Room room = new Room();
         Regex regex = new Regex("a-zA-Z0-9_");
-
         int[,] blocks = new int[200, 200];
-
         string editCode = "";
         int fillBlock = 0;
         int borderBlock = 9;
         int width = 200;
         int height = 200;
-
         int guestCounter = 0;
 
         Dictionary<string, KeyValuePair<DateTime, Action>> timers = new Dictionary<string, KeyValuePair<DateTime, Action>>();
 
-        private void HandleCodeArguemnts()
+        private void HandleCodeArguments()
         {
-            //all arguments
             string[] arguments;
-
             if (this.RoomData.ContainsKey("editkey"))
             {
                 arguments = this.RoomData["editkey"].Split('/');
-
                 this.editCode = arguments[0];
 
                 foreach (string argument in arguments)
@@ -110,33 +113,27 @@ namespace MushroomsUnity3DExample
                     if (argument == arguments[0])
                         continue;
 
-                    //args = 
+                    string[] args = argument.Split(' ');
+                    switch (args[0])
+                    {
+                        case "fill":
+                            if (args.Count() >= 2)
+                            {
+                                int.TryParse(args[1], out this.fillBlock);
+                            }
+                            break;
 
-                    HandleCommand(null, argument.Split(' '));
+                        case "border":
+                            if (args.Count() >= 2)
+                            {
+                                int.TryParse(args[1], out this.borderBlock);
+
+                                if (this.borderBlock < 9 || this.borderBlock > 15)
+                                    this.borderBlock = 9;
+                            }
+                            break;
+                    }
                 }
-            }
-        }
-
-        private void HandleCommand(Player player, string[] args)
-        {
-            switch (args[0])
-            {
-                case "fill":
-                    if (args.Count() >= 2)
-                    {
-                        int.TryParse(args[1], out this.fillBlock);
-                    }
-                    break;
-
-                case "border":
-                    if (args.Count() >= 2)
-                    {
-                        int.TryParse(args[1], out this.borderBlock);
-
-                        if (this.borderBlock < 9 || this.borderBlock > 15)
-                            this.borderBlock = 9;
-                    }
-                    break;
             }
         }
 
@@ -146,6 +143,9 @@ namespace MushroomsUnity3DExample
             {
                 switch (args[0])
                 {
+                    case "ping":
+                        Broadcast("info", "Pong!");
+                        break;
                     case "clear":
                         {
                             int blockId = 0;
@@ -155,7 +155,6 @@ namespace MushroomsUnity3DExample
                             this.Fill(blockId);
                         }
                         break;
-
                     case "borders":
                         {
                             int blockId = 9;
@@ -169,7 +168,6 @@ namespace MushroomsUnity3DExample
                             this.Borders(blockId);
                         }
                         break;
-
                     case "kick":
                         if (args.Count() >= 2)
                         {
@@ -178,14 +176,20 @@ namespace MushroomsUnity3DExample
                             foreach (Player p in Players)
                             {
                                 if (p.name == args[1])
-                                {
                                     playersToKick.Add(p);
-                                }
                             }
 
                             foreach (Player p in playersToKick)
-                                p.killPlayer();
-
+                                p.Disconnect();
+                        }
+                        break;
+                    case "kickall":
+                        {
+                            foreach (Player p in Players)
+                            {
+                                if (p.name != player.name)
+                                    p.Disconnect();
+                            }
                         }
                         break;
                 }
@@ -197,12 +201,34 @@ namespace MushroomsUnity3DExample
                     case "ban":
                         if (args.Count() >= 2)
                         {
-                            string playerToBan = args[1];
-
-                            PlayerIO.BigDB.LoadOrCreate("simple" + playerToBan, "banned", (DatabaseObject o)=>
+                            string playerToBanName = args[1];
+                            Player playerToBan = null;
+                            foreach (Player temp in Players)
+                            {
+                                if (temp.name == playerToBanName)
                                 {
-                                    Broadcast("write", playerToBan + " is banned!");
+                                    playerToBan = temp;
+                                    break;
+                                }
+                            }
+                            if (playerToBan == null)
+                                break;
+
+                            PlayerIO.BigDB.Load("bans", playerToBan.name, (DatabaseObject o) =>
+                            {
+                                Broadcast("info", playerToBan + " is already banned!");
+                            }, (PlayerIOError e) =>
+                            {
+                                PlayerIO.BigDB.LoadOrCreate("bans", playerToBan.name, (DatabaseObject o) =>
+                                {
+                                    playerToBan.PlayerObject.Set("banned", true);
+                                    Broadcast("info", "Banned player " + playerToBan.name);
+
+                                }, (PlayerIOError l) =>
+                                {
+                                    Broadcast("info", "Error banning player: " + l.ToString());
                                 });
+                            });
                         }
                         break;
                 }
@@ -222,11 +248,10 @@ namespace MushroomsUnity3DExample
         public override void GameStarted()
         {
             Console.WriteLine("Game is started: " + RoomId);
-
             Exception exception = null;
             try
             {
-                HandleCodeArguemnts();
+                HandleCodeArguments();
             }
             catch (Exception e)
             {
@@ -246,9 +271,7 @@ namespace MushroomsUnity3DExample
                 }
             }
 
-            //this.AddTimer(new Action(() => OnPlayerUpdate(room)), 100);
             this.AddTimer(new Action(() => OnTimerUpdate()), 100);
-
             base.GameStarted();
 
             if (exception != null)
@@ -260,7 +283,6 @@ namespace MushroomsUnity3DExample
             base.GameClosed();
         }
 
-
         public override void UserJoined(Player player)
         {
 
@@ -270,9 +292,7 @@ namespace MushroomsUnity3DExample
                 guestCounter++;
             }
             else
-            {
                 player.name = player.ConnectUserId.Substring(6); //s i m p l e
-            }
 
             if (owner == "")
             {
@@ -326,17 +346,17 @@ namespace MushroomsUnity3DExample
 
         public override bool AllowUserJoin(Player player)
         {
-            if (player.ConnectUserId != "")
-                return true;
-            if (regex.IsMatch(player.ConnectUserId))
-                return true;
-
-            if (player.PlayerObject.Contains("allowed"))
-            {
-                return (player.PlayerObject.GetBool("allowed"));
-            }
-            else
+            if (player.PlayerObject.Contains("banned") && player.PlayerObject.GetBool("banned"))
                 return false;
+            else
+            {
+                //if (player.ConnectUserId != "" && regex.IsMatch(player.ConnectUserId))
+                if (player.ConnectUserId != "")
+                    return true;
+                return false;
+                //else
+                //  return false;
+            }
         }
 
         public override void GotMessage(Player player, Message message)
@@ -464,11 +484,8 @@ namespace MushroomsUnity3DExample
                         {
                             this.OnCommand(player, text.Substring(1).Split(' '));
                         }
-                        else
-                        {
-
+                        else if (text.Length > 0)
                             Broadcast("say", player.Id, text);
-                        }
                     }
                     return;
 
