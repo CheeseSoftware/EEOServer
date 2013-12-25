@@ -48,6 +48,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EE070O.cs" />
     <Compile Include="EE092.cs" />
     <Compile Include="EE070.cs" />
     <Compile Include="Game.cs" />

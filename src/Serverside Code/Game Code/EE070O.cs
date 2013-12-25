@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace MushroomsUnity3DExample
 {
-    /*[RoomType("Lobby")]
+    [RoomType("Lobby")]
     class Lobby : Game<Player>
     {
         Regex regex = new Regex("^[a-zA-Z0-9]*$");
@@ -30,7 +30,7 @@ namespace MushroomsUnity3DExample
                         if (username.Count() >= 3 && regex.IsMatch(username))
                         {
                             if (!player.PlayerObject.Contains("name")
-                                /*|| player.PlayerObject.GetString("name") == null* /)
+                                /*|| player.PlayerObject.GetString("name") == null*/)
                             {
                                 player.PlayerObject.Set("name", username);
                                 player.PlayerObject.Save();
@@ -73,13 +73,14 @@ namespace MushroomsUnity3DExample
             }
             throw new Exception(message.ToString());
         }
-    }*/
+    }
 
-    [RoomType("FlixelWalkerFX3")]
-    class EE070 : Game<Player>
+    [RoomType("EE070O")]
+    class EE070O: Game<Player>
     {
         string owner = "";
         Room room = new Room();
+        Regex regex = new Regex("a-zA-Z0-9_");
 
         int[,] blocks = new int[200, 200];
 
@@ -88,6 +89,8 @@ namespace MushroomsUnity3DExample
         int borderBlock = 9;
         int width = 200;
         int height = 200;
+
+        int guestCounter = 0;
 
         Dictionary<string, KeyValuePair<DateTime, Action>> timers = new Dictionary<string, KeyValuePair<DateTime, Action>>();
 
@@ -137,6 +140,85 @@ namespace MushroomsUnity3DExample
             }
         }
 
+        private void OnCommand(Player player, string[] args)
+        {
+            if (player.IsMod || player.name == owner)
+            {
+                switch (args[0])
+                {
+                    case "clear":
+                        {
+                            int blockId = 0;
+                            if (args.Count() >= 2)
+                                int.TryParse(args[1], out blockId);
+
+                            this.Fill(blockId);
+                        }
+                        break;
+
+                    case "borders":
+                        {
+                            int blockId = 9;
+                            if (args.Count() >= 2)
+                            {
+                                int.TryParse(args[1], out blockId);
+
+                                if (blockId < 9 || blockId > 15)
+                                    blockId = 9;
+                            }
+                            this.Borders(blockId);
+                        }
+                        break;
+
+                    case "kick":
+                        if (args.Count() >= 2)
+                        {
+                            List<Player> playersToKick = new List<Player>();
+
+                            foreach (Player p in Players)
+                            {
+                                if (p.name == args[1])
+                                {
+                                    playersToKick.Add(p);
+                                }
+                            }
+
+                            foreach (Player p in playersToKick)
+                                p.killPlayer();
+
+                        }
+                        break;
+                }
+            }
+            if (player.IsMod)
+            {
+                switch (args[0])
+                {
+                    case "ban":
+                        if (args.Count() >= 2)
+                        {
+                            string playerToBan = args[1];
+
+                            PlayerIO.BigDB.LoadOrCreate("simple" + playerToBan, "banned", (DatabaseObject o)=>
+                                {
+                                    Broadcast("write", playerToBan + " is banned!");
+                                });
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void Borders(int blockId)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Fill(int blockId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void GameStarted()
         {
             Console.WriteLine("Game is started: " + RoomId);
@@ -178,40 +260,56 @@ namespace MushroomsUnity3DExample
             base.GameClosed();
         }
 
+
         public override void UserJoined(Player player)
         {
+
+            if (player.ConnectUserId == "simpleguest")
+            {
+                player.name = "guest-" + guestCounter.ToString();
+                guestCounter++;
+            }
+            else
+            {
+                player.name = player.ConnectUserId.Substring(6); //s i m p l e
+            }
+
             if (owner == "")
             {
-                owner = player.ConnectUserId;
+                owner = player.name;
                 player.HasCode = true;
             }
 
-            object[] messageData = new object[200 * 200 + 2];
+            object[] messageData = new object[200 * 200 + 3];
 
-            if (!player.HasCode)
+            if (player.ConnectUserId != "simpleguest")
             {
-                if (this.RoomData.ContainsKey("editkey"))
+                if (!player.HasCode)
                 {
-                    if (this.RoomData["editkey"].Split('/').First() == "")
+                    if (this.RoomData.ContainsKey("editkey"))
+                    {
+                        if (this.RoomData["editkey"].Split('/').First() == "")
+                        {
+                            player.HasCode = true;
+                        }
+                    }
+                    else
                     {
                         player.HasCode = true;
                     }
                 }
-                else
-                {
-                    player.HasCode = true;
-                }
             }
 
             messageData[0] = player.Id;
-            messageData[1] = player.HasCode;
+            messageData[1] = player.name;
+            messageData[2] = player.HasCode;
 
             //world data
             for (int y = 0; y < 200; y++)
             {
                 for (int x = 0; x < 200; x++)
                 {
-                    messageData[y * 200 + x + 2] = blocks[x, y];
+                    messageData[y * 200 + x + 3] = blocks[x, y];
                 }
             }
 
@@ -228,7 +326,17 @@ namespace MushroomsUnity3DExample
 
         public override bool AllowUserJoin(Player player)
         {
-            return base.AllowUserJoin(player);
+            if (player.ConnectUserId != "")
+                return true;
+            if (regex.IsMatch(player.ConnectUserId))
+                return true;
+
+            if (player.PlayerObject.Contains("allowed"))
+            {
+                return (player.PlayerObject.GetBool("allowed"));
+            }
+            else
+                return false;
         }
 
         public override void GotMessage(Player player, Message message)
@@ -247,18 +355,26 @@ namespace MushroomsUnity3DExample
             {
                 case "init":
                     {
+                        if (!player.HasCode && player.name == owner && player.ConnectUserId != "simpleguest")
+                        {
+                            player.HasCode = true;
+                            player.Send("access");
+                        }
+
                         foreach (Player p in Players)
                         {
                             if (p.Id != player.Id)
                             {
                                 p.Send("add",
                                     player.Id,
+                                    player.name,
                                     (int)0,     // faceid
                                     (double)16.0,     // x
                                     (double)16.0);    // y
 
                                 player.Send("add",
                                     p.Id,
+                                    p.name,
                                     (int)p.Face,     // faceid
                                     (double)p.x,     // x
                                     (double)p.y);    // y
@@ -297,6 +413,9 @@ namespace MushroomsUnity3DExample
 
                 case "c": //block
                     {
+                        if (player.ConnectUserId == "simpleguest" && player.name != owner)
+                            return;
+
                         if (player.HasCode)
                         {
                             int x = message.GetInt(0);
@@ -317,9 +436,9 @@ namespace MushroomsUnity3DExample
                     return;
 
                 case "hide":
-                    if (message.Count >= 2)
+                    if (message.Count >= 1)
                     {
-                        string color = message.GetString(1);
+                        string color = message.GetString(0);
 
                         Broadcast("hide", color);
 
@@ -337,6 +456,20 @@ namespace MushroomsUnity3DExample
                     return;
 
                 case "say":
+                    if (message.Count >= 1)
+                    {
+                        string text = message.GetString(0);
+
+                        if (text.StartsWith("/"))
+                        {
+                            this.OnCommand(player, text.Substring(1).Split(' '));
+                        }
+                        else
+                        {
+
+                            Broadcast("say", player.Id, text);
+                        }
+                    }
                     return;
 
                 case "k":   // crown
@@ -379,6 +512,9 @@ namespace MushroomsUnity3DExample
                 //    return;
 
                 case "access":  // <string code>
+                    if (player.ConnectUserId == "simpleguest")
+                        return;
+
                     if (!player.HasCode)
                     {
                         if (this.editCode == message.GetString(0))
