@@ -59,6 +59,7 @@
     <Compile Include="Movement\SynchronizedObject.cs" />
     <Compile Include="Movement\SynchronizedSprite.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="utlity\Compressor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
