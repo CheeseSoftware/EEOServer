@@ -60,6 +60,9 @@
     <Compile Include="Movement\SynchronizedSprite.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="utlity\Compressor.cs" />
+    <Compile Include="utlity\Pair.cs" />
+    <Compile Include="utlity\QueueReader.cs" />
+    <Compile Include="utlity\ByteCompressor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

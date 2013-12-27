@@ -8,7 +8,7 @@ namespace MushroomsUnity3DExample
 {
     public class Player : Movement.PhysicsPlayer
     {
-        string name = "";
+        //string name = "";
         int face = 0;
         bool hasCode = false;
 

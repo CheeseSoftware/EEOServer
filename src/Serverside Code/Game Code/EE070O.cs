@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using PlayerIO.GameLibrary;
 using System.Text.RegularExpressions;
+using MushroomsUnity3DExample.utlity;
 
 namespace MushroomsUnity3DExample
 {
@@ -90,7 +91,7 @@ namespace MushroomsUnity3DExample
         string owner = "";
         Room room = new Room();
         Regex regex = new Regex("a-zA-Z0-9_");
-        int[,] blocks = new int[200, 200];
+        short[,] blocks = new short[200, 200];
         string editCode = "";
         int fillBlock = 0;
         int borderBlock = 9;
@@ -263,11 +264,11 @@ namespace MushroomsUnity3DExample
                 for (int x = 0; x < 200; x++)
                 {
                     if (x == 0 || x == 199 || y == 0 || y == 199)
-                        blocks[x, y] = (int)this.borderBlock;
+                        blocks[x, y] = (short)this.borderBlock;
                     else if (x <= 2 && y <= 2)
                         blocks[x, y] = 0;
                     else
-                        blocks[x, y] = (int)this.fillBlock;
+                        blocks[x, y] = (short)this.fillBlock;
                 }
             }
 
@@ -300,7 +301,7 @@ namespace MushroomsUnity3DExample
                 player.HasCode = true;
             }
 
-            object[] messageData = new object[200 * 200 + 3];
+            //object[] messageData = new object[200 * 200 + 3];
 
             if (player.ConnectUserId != "simpleguest")
             {
@@ -320,20 +321,24 @@ namespace MushroomsUnity3DExample
                 }
             }
 
-            messageData[0] = player.Id;
+            /*messageData[0] = player.Id;
             messageData[1] = player.name;
-            messageData[2] = player.HasCode;
+            messageData[2] = player.HasCode;*/
+
+
 
             //world data
-            for (int y = 0; y < 200; y++)
+            /*for (int y = 0; y < 200; y++)
             {
                 for (int x = 0; x < 200; x++)
                 {
                     messageData[y * 200 + x + 3] = blocks[x, y];
                 }
-            }
+            }*/
 
-            player.Send("init", messageData);
+            Pair<bool, byte[]> worldData = utlity.Compressor.CompressWorld(blocks, 200, 200);
+
+            player.Send("init", player.Id, player.name, player.HasCode, worldData.first , worldData.second);
             base.UserJoined(player);
         }
 
@@ -346,17 +351,41 @@ namespace MushroomsUnity3DExample
 
         public override bool AllowUserJoin(Player player)
         {
-            if (player.PlayerObject.Contains("banned") && player.PlayerObject.GetBool("banned"))
-                return false;
-            else
+            if (player.ConnectUserId == "" || regex.IsMatch(player.ConnectUserId))
             {
-                //if (player.ConnectUserId != "" && regex.IsMatch(player.ConnectUserId))
-                if (player.ConnectUserId != "")
-                    return true;
-                return false;
-                //else
-                //  return false;
+                if (player.PlayerObject != null)
+                    return false;
+
+                if (player.PlayerObject.Contains("allowed"))
+                    return (player.PlayerObject.GetBool("allowed"));
+                else
+                    return false;
             }
+            else if (player.PlayerObject != null)
+            {
+                if (player.PlayerObject.Contains("banned"))
+                {
+                    return (!player.PlayerObject.GetBool("banned"));
+                }
+            }
+            return true;
+
+
+            /*if (player.PlayerObject.Contains("banned"))
+            {
+                if (player.PlayerObject.GetBool("banned"))
+                    return false;
+            }
+
+            if (player.ConnectUserId == "" || regex.IsMatch(player.ConnectUserId))
+            {
+
+            }
+            //if (player.ConnectUserId != "")
+                //return true;
+            return true;
+            //else
+            //  return false; */
         }
 
         public override void GotMessage(Player player, Message message)
@@ -442,13 +471,11 @@ namespace MushroomsUnity3DExample
                             int y = message.GetInt(1);
                             int blockId = message.GetInt(2);
 
-
-
                             if ((x >= 0 && y >= 0 && x <= 199 && y <= 199)
                                 && ((x != 0 && x != 199 && y != 0 && y != 199) || (blockId >= 9 && blockId <= 15))
                                 && blockId != blocks[x, y])
                             {
-                                blocks[x, y] = blockId;
+                                blocks[x, y] = (short)blockId;
                                 Broadcast("c", x, y, blockId);
                             }
                         }
@@ -554,14 +581,6 @@ namespace MushroomsUnity3DExample
             throw new Exception(message.ToString());
         }
 
-        private void OnPlayerUpdate(Room room)
-        {
-            foreach (Movement.PhysicsPlayer p in Players)
-            {
-                p.tick(room);
-            }
-        }
-
         public void OnTimerUpdate()
         {
             List<Action> tasks = new List<Action>();
@@ -582,6 +601,14 @@ namespace MushroomsUnity3DExample
 
             foreach (var t in tasks)
                 t();
+        }
+
+        private void OnPlayerUpdate(Room room)
+        {
+            foreach (Movement.PhysicsPlayer p in Players)
+            {
+                p.tick(room);
+            }
         }
     }
 }

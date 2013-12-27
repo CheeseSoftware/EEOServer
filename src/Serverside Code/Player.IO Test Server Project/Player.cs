@@ -8,7 +8,7 @@ namespace DevelopmentTestServer
 {
     class Player : BasePlayer
     {
-        string name;
+        string name = "";
 
         public string Name
         {

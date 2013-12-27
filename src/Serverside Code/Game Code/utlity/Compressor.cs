@@ -2,11 +2,125 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.IO.Compression;
 
 namespace MushroomsUnity3DExample.utlity
 {
     public class Compressor
     {
+        public static Pair<bool, byte[]> CompressWorld(short[,] world, short width, short height)
+        {
+            Queue<byte> worldData = new Queue<byte>();
+            short[] cornerBlocks = new short[796];// 200+200+198+198
+
+            short i = 0;
+            short j = width;
+            short k = 0;
+
+            for (; i < j; i++) // top
+            {
+                cornerBlocks[i] = world[i, 0];
+            }
+
+            k = j;
+            j += width;
+
+            for (; i < j; i++) // bottom
+            {
+                cornerBlocks[i] = world[i - k, 199];
+            }
+
+            k = (short)(j - 1);
+            j += (short)(height - 2);
+
+            for (; i < j; i++) // left
+            {
+                cornerBlocks[i] = world[0, i - k];
+            }
+
+            k = (short)(j - 1);
+            j += (short)(height - 2);
+
+            for (; i < j; i++) // right
+            {
+                cornerBlocks[i] = world[199, i - k];
+            }
+
+            worldData.Enqueue((byte)(width >> 8));
+            worldData.Enqueue((byte)(width & 0xFF));
+
+            worldData.Enqueue((byte)(height >> 8));
+            worldData.Enqueue((byte)(height & 0xFF));
+
+            CompressQuadTree(world, worldData, 1, 1, (short)(width-1), (short)(height-1));
+            CompressBinaryTree(cornerBlocks, worldData, 0, j);
+
+            byte[] raw = worldData.ToArray();
+            byte[] deflated = ByteCompressor.Deflate(raw);
+
+            if (deflated.Length < raw.Length)
+                return new Pair<bool, byte[]>(true, deflated);//ZipCompressor.Compress(worldData.ToArray());
+            else
+                return new Pair<bool, byte[]>(false, raw);
+        }
+
+        public static short[,] DecompressWorld(bool iDeflated, byte[] data)
+        {
+            QueueReader<byte> input;
+            short[,] world;
+            short[] cornerBlocks;
+            short width;
+            short height;
+
+            input = new QueueReader<byte>(data);
+
+            width = DequeueShortAsBytes(input);
+            height = DequeueShortAsBytes(input);
+
+            world = new short[width, height];
+            cornerBlocks = new short[2*width + 2*height - 4];
+
+            DecompressQuadTree(world, input, 1, 1, (short)(width - 1), (short)(height - 1));
+            DecompressBinaryTree(cornerBlocks, input, 0, (short)cornerBlocks.Length);
+
+            // Put corner blocks to the world.
+            short i = 0;
+            short j = width;
+            short k = 0;
+
+            for (; i < j; i++) // top
+            {
+                world[i, 0] = cornerBlocks[i];
+            }
+
+            k = j;
+            j += width;
+
+            for (; i < j; i++) // bottom
+            {
+                world[i - k, 199] = cornerBlocks[i];
+            }
+
+            k = (short)(j - 1);
+            j += (short)(height - 2);
+
+            for (; i < j; i++) // left
+            {
+                world[0, i - k] = cornerBlocks[i];
+            }
+
+            k = (short)(j - 1);
+            j += (short)(height - 2);
+
+            for (; i < j; i++) // right
+            {
+                world[199, i - k] = cornerBlocks[i];
+            }
+
+            return world;
+        }
+
         /// <summary>
         /// Only posetive values are allowed!
         /// Data stored as:
@@ -20,7 +134,7 @@ namespace MushroomsUnity3DExample.utlity
         /// <param name="y"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public static void CompressQuadTree(short[,] input, Stack<byte> output, short x1, short y1, short x2, short y2)
+        public static void CompressQuadTree(short[,] input, Queue<byte> output, short x1, short y1, short x2, short y2)
         {
             short width = (short)(x2 - x1);
             short height = (short)(y2 - y1);
@@ -30,34 +144,37 @@ namespace MushroomsUnity3DExample.utlity
 
             byte finalQuadDataByte;
 
+            if (width == 0 || height == 0)
+                return;
+
             if (width <= 2 && height <= 2)
             {
                 if (width == 1 && height == 1)
                 {
-                    AddShortToByteStack(output, input[x1, y1]);
+                    EnqueueShortAsBytes(output, input[x1, y1]);
                 }
                 else if (width == 2 && height == 1)
                 {
-                    AddShortToByteStack(output, input[x1, y1]);
-                    AddShortToByteStack(output, input[x2, y1]);
+                    EnqueueShortAsBytes(output, input[x1, y1]);
+                    EnqueueShortAsBytes(output, input[x1+1, y1]);
                 }
                 else if (width == 1 && height == 2)
                 {
-                    AddShortToByteStack(output, input[x1, y1]);
-                    AddShortToByteStack(output, input[x1, y2]);
+                    EnqueueShortAsBytes(output, input[x1, y1]);
+                    EnqueueShortAsBytes(output, input[x1, y1+1]);
                 }
                 else if (width == 2 && height == 2)
                 {
-                    AddShortToByteStack(output, input[x1, y1]);
-                    AddShortToByteStack(output, input[x2, y1]);
-                    AddShortToByteStack(output, input[x1, y2]);
-                    AddShortToByteStack(output, input[x2, y2]);
+                    EnqueueShortAsBytes(output, input[x1, y1]);
+                    EnqueueShortAsBytes(output, input[x1+1, y1]);
+                    EnqueueShortAsBytes(output, input[x1, y1+1]);
+                    EnqueueShortAsBytes(output, input[x1+1, y1+1]);
                 }
                 return;
             }
 
-            middleX = (short)((x1 << 1) - (x2 >> 1));
-            middleY = (short)((y1 << 1) - (y2 >> 1));
+            middleX = (short)(x1 + (width >> 1));
+            middleY = (short)(y1 + (height >> 1));
 
             
             // This is also 4 booleans(rather 8, to be precise).
@@ -82,7 +199,7 @@ namespace MushroomsUnity3DExample.utlity
                             //weak x, weak y
                             if (width == 1 || height == 1)
                             {
-                                output.Push(finalQuadDataByte);
+                                output.Enqueue(finalQuadDataByte);
                                 return;
                             }
 
@@ -148,17 +265,17 @@ namespace MushroomsUnity3DExample.utlity
                     }
                     else
                     {
-                        output.Push(finalQuadDataByte);
+                        output.Enqueue(finalQuadDataByte);
                     }
 
                     if (isSimple)
                     {
-                        AddShortToByteStack(output, l_id);
+                        EnqueueShortAsBytes(output, l_id);
                     }
                     else
                     {
                         // declares another quad inside the square
-                        CompressQuadTree(input, output, l_x1, l_y1, l_x2, l_x2);
+                        CompressQuadTree(input, output, l_x1, l_y1, l_x2, l_y2);
                     }
 
                     // Goes back to the end...
@@ -171,7 +288,7 @@ namespace MushroomsUnity3DExample.utlity
             lambda(3);
         }
 
-        public static void DecompressQuadTree(short[,] output, Stack<byte> input, short x1, short y1, short x2, short y2) //public static void DecompressQuadTree(short[,] output, Stack<byte> input, short x, short y, short width, short height)
+        public static void DecompressQuadTree(short[,] output, QueueReader<byte> input, short x1, short y1, short x2, short y2) //public static void DecompressQuadTree(short[,] output, QueueReader<byte> input, short x, short y, short width, short height)
         {
             short width = (short)(x2 - x1);
             short height = (short)(y2 - y1);
@@ -180,25 +297,25 @@ namespace MushroomsUnity3DExample.utlity
             short middleY;
 
             int binaryDataByte;
-            byte id;
+            //byte id;
 
             if (width == 0 || height == 0)
                 return;
 
             if (width <= 2 && height <= 2)
             {
-                for (; y1 < y2; y1++) //output[x, y] = input.Pop();
+                for (int yy = y1; yy < y2; yy++) //output[x, y] = input.Dequeue();
                 {
-                    for (; x1 < x2; x1++)
-                        output[x1, y1] = input.Pop();
+                    for (int xx = x1; xx < x2; xx++)
+                        output[xx, yy] = (short)((input.Dequeue()<<8) | input.Dequeue());
                 }
                 return;
             }
 
-            middleX = (short)((x1 << 1) - (x2 >> 1));
-            middleY = (short)((y1 << 1) - (y2 >> 1));
+            middleX = (short)(x1 + (width >> 1));//(x1) - (x1+x2 >> 1);
+            middleY = (short)(y1 + (height >> 1));//(y1) - (y1+y2 >> 1);
 
-            binaryDataByte = input.Pop();
+            binaryDataByte = input.Dequeue();
 
             Action<byte> lambda = new Action<byte>(b =>
                 {
@@ -241,11 +358,11 @@ namespace MushroomsUnity3DExample.utlity
 
                     if ((binaryDataByte & (1 << b)) == (1 << b))
                     {
-                        id = input.Pop();
-                        for (; l_y1 < l_y2; l_y1++)
+                        l_id = DequeueShortAsBytes(input);
+                        for (int yy = l_y1; yy < l_y2; yy++)
                         {
-                            for (; l_x1 < l_x2; l_x1++)
-                                output[l_x1, l_y1] = id;
+                            for (int xx = l_x1; xx < l_x2; xx++)
+                                output[xx, yy] = l_id;
                         }
                     }
                     else
@@ -260,7 +377,7 @@ namespace MushroomsUnity3DExample.utlity
                 lambda(3);
         }
 
-        public static void CompressBinaryTree(short[] input, Stack<byte> output, short start, short end)
+        public static void CompressBinaryTree(short[] input, Queue<byte> output, short start, short end)
         {
             short length = (short)(end - start);
             short middle;
@@ -271,11 +388,12 @@ namespace MushroomsUnity3DExample.utlity
             {
                 if (length == 1)
                 {
-                    AddShortToByteStack(output, input[start]);
+                    EnqueueShortAsBytes(output, input[start]);
                 }
                 else if (length == 2)
                 {
-                    AddShortToByteStack(output, input[start]);
+                    EnqueueShortAsBytes(output, input[start]);
+                    EnqueueShortAsBytes(output, input[start+1]);
                 }
                 return;
             }
@@ -298,7 +416,7 @@ namespace MushroomsUnity3DExample.utlity
                     {
                         if (length == 1)
                         {
-                            output.Push(finalBinaryDataByte);
+                            output.Enqueue(finalBinaryDataByte);
                             return;
                         }
                         l_start = start;
@@ -327,12 +445,12 @@ namespace MushroomsUnity3DExample.utlity
                     }
                     else
                     {
-                        output.Push(finalBinaryDataByte);
+                        output.Enqueue(finalBinaryDataByte);
                     }
 
                     if (isSimple)
                     {
-                        AddShortToByteStack(output, l_id);
+                        EnqueueShortAsBytes(output, l_id);
                     }
                     else
                     {
@@ -344,17 +462,18 @@ namespace MushroomsUnity3DExample.utlity
                     return;
                 });
 
+            // 1a -> 0ab-> 1b
             lambda(1);
         }
 
-        public static void DecompressBinaryTree(short[] output, Stack<byte> input, short start, short end)
+        public static void DecompressBinaryTree(short[] output, QueueReader<byte> input, short start, short end)
         {
             short length = (short)(start - end);
             short middle;
 
             //tells if the children are simple(true) or complex(false).
-            int binaryDataByte;
-            byte id;
+            byte binaryDataByte;
+            short id;
 
             if (length <= 2)
             {
@@ -363,23 +482,25 @@ namespace MushroomsUnity3DExample.utlity
 
                 if (length == 1)
                 {
-                    output[start] = input.Pop();
+                    output[start] = DequeueShortAsBytes(input);
                 }
                 else // length must be 2
                 {
-                    output[start] = input.Pop();
-                    output[start + 1] = input.Pop();
+                    output[start] = DequeueShortAsBytes(input);
+                    output[start + 1] = DequeueShortAsBytes(input);
                 }
+
+                return;
             }
 
             middle = (short)(start + length / 2);
 
 
-            binaryDataByte = input.Pop();
+            binaryDataByte = input.Dequeue();
 
             if ((binaryDataByte & 1) == 1)
             {
-                id = input.Pop();
+                id = DequeueShortAsBytes(input);
                 for (int i = start; i < middle; i++)
                     output[i] = id;
             }
@@ -391,7 +512,7 @@ namespace MushroomsUnity3DExample.utlity
 
             if ((binaryDataByte & 2) == 2)
             {
-                id = input.Pop();
+                id = DequeueShortAsBytes(input);
                 for (int i = middle; i < end; i++)
                     output[i] = id;
             }
@@ -399,7 +520,6 @@ namespace MushroomsUnity3DExample.utlity
             {
                 DecompressBinaryTree(output, input, middle, end);
             }
-
         }
 
         private static short getType(short[] input, short start, short end)
@@ -425,11 +545,11 @@ namespace MushroomsUnity3DExample.utlity
             if (blockId == -1)
                 throw new Exception("Negative value(-1) found in data! Only positive values should be used. Negative values may be allowed, but -1 is forbidden!");
 
-            for (; y1 < y2; y1++)
+            for (int y = y1; y < y2; y++)
             {
-                for (; x1 < x2; x1++)
+                for (int x = x1; x < x2; x++)
                 {
-                    if (input[x1, y1] != blockId)
+                    if (input[x, y] != blockId)
                         return -1;
                 }
             }
@@ -437,10 +557,15 @@ namespace MushroomsUnity3DExample.utlity
             return blockId;
         }
 
-        private static void AddShortToByteStack(Stack<byte> output, short value)
+        private static void EnqueueShortAsBytes(Queue<byte> output, short value)
         {
-            output.Push((byte)(value >> 8));
-            output.Push((byte)(value & 0xFF));
+            output.Enqueue((byte)(value >> 8));
+            output.Enqueue((byte)(value & 0xFF));
+        }
+
+        private static short DequeueShortAsBytes(QueueReader<byte> input)
+        {
+            return (short)((input.Dequeue() << 8) | input.Dequeue());
         }
     }
 }
