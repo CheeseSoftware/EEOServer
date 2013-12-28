@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
+using System.Linq.Expressions;
 
 namespace MushroomsUnity3DExample.utlity
 {
@@ -11,14 +12,32 @@ namespace MushroomsUnity3DExample.utlity
     {
         public static Pair<bool, byte[]> CompressWorld(short[,] world, short width, short height)
         {
-            Queue<byte> worldData = new Queue<byte>();
-            short[] cornerBlocks = new short[796];// 200+200+198+198
+            ByteWriter worldData = new ByteWriter();
+            short[] cornerBlocks = new short[2 * width + 2 * height - 2];//new short[796];// 200+200+198+198
 
-            short i = 0;
-            short j = width;
-            short k = 0;
+            //short i = 0;
+            short end = width;
+            short lastPos = 0;
 
-            for (; i < j; i++) // top
+            Action<Func<short, short>> lambda = (Func<short, short> borderBlock) =>
+                {
+                    for (short i = 0; i < end; i++)
+                    {
+                        cornerBlocks[i + lastPos] = borderBlock(i);
+                    }
+                    lastPos += end;
+                };
+
+            lambda((short i) => { return world[i, 0]; });
+
+            lambda((short i) => { return world[i, height-1]; });
+
+            end = (short)(height - 2);
+            lambda((short i) => { return world[0, i+1]; });
+
+            lambda((short i) => { return world[width-1, i+1]; });
+
+            /*for (; i < j; i++) // top
             {
                 cornerBlocks[i] = world[i, 0];
             }
@@ -28,7 +47,7 @@ namespace MushroomsUnity3DExample.utlity
 
             for (; i < j; i++) // bottom
             {
-                cornerBlocks[i] = world[i - k, 199];
+                cornerBlocks[i] = world[i - k, height-1];
             }
 
             k = (short)(j - 1);
@@ -44,25 +63,27 @@ namespace MushroomsUnity3DExample.utlity
 
             for (; i < j; i++) // right
             {
-                cornerBlocks[i] = world[199, i - k];
-            }
+                cornerBlocks[i] = world[width-1, i - k];
+            }*/
 
-            worldData.Enqueue((byte)(width >> 8));
-            worldData.Enqueue((byte)(width & 0xFF));
-
-            worldData.Enqueue((byte)(height >> 8));
-            worldData.Enqueue((byte)(height & 0xFF));
-
+            worldData.WriteShort(width);
+            worldData.WriteShort(height);
+             
             CompressQuadTree(world, worldData, 1, 1, (short)(width-1), (short)(height-1));
-            CompressBinaryTree(cornerBlocks, worldData, 0, j);
+            CompressBinaryTree(cornerBlocks, worldData, 0, lastPos);
 
-            byte[] raw = worldData.ToArray();
-            byte[] deflated = ByteCompressor.Deflate(raw);
+            byte[] quadTree = worldData.ToArray();
+            byte[] deflated = ByteCompressor.Deflate(quadTree);
 
-            if (deflated.Length < raw.Length)
+            if (deflated.Length < quadTree.Length)
                 return new Pair<bool, byte[]>(true, deflated);//ZipCompressor.Compress(worldData.ToArray());
             else
-                return new Pair<bool, byte[]>(false, raw);
+                return new Pair<bool, byte[]>(false, quadTree);
+        }
+
+        public static Pair<bool, byte[]> CompressArea(short[,] world, short x1, short y1, short x2, short y2)
+        {
+            throw new NotImplementedException();
         }
 
         public static short[,] DecompressWorld(bool iDeflated, byte[] data)
@@ -134,7 +155,7 @@ namespace MushroomsUnity3DExample.utlity
         /// <param name="y"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public static void CompressQuadTree(short[,] input, Queue<byte> output, short x1, short y1, short x2, short y2)
+        public static void CompressQuadTree(short[,] input, ByteWriter output, short x1, short y1, short x2, short y2)
         {
             short width = (short)(x2 - x1);
             short height = (short)(y2 - y1);
@@ -151,24 +172,24 @@ namespace MushroomsUnity3DExample.utlity
             {
                 if (width == 1 && height == 1)
                 {
-                    EnqueueShortAsBytes(output, input[x1, y1]);
+                    output.WriteShort(input[x1, y1]);
                 }
                 else if (width == 2 && height == 1)
                 {
-                    EnqueueShortAsBytes(output, input[x1, y1]);
-                    EnqueueShortAsBytes(output, input[x1+1, y1]);
+                    output.WriteShort(input[x1, y1]);
+                    output.WriteShort(input[x1+1, y1]);
                 }
                 else if (width == 1 && height == 2)
                 {
-                    EnqueueShortAsBytes(output, input[x1, y1]);
-                    EnqueueShortAsBytes(output, input[x1, y1+1]);
+                    output.WriteShort(input[x1, y1]);
+                    output.WriteShort(input[x1, y1+1]);
                 }
                 else if (width == 2 && height == 2)
                 {
-                    EnqueueShortAsBytes(output, input[x1, y1]);
-                    EnqueueShortAsBytes(output, input[x1+1, y1]);
-                    EnqueueShortAsBytes(output, input[x1, y1+1]);
-                    EnqueueShortAsBytes(output, input[x1+1, y1+1]);
+                    output.WriteShort(input[x1, y1]);
+                    output.WriteShort(input[x1+1, y1]);
+                    output.WriteShort(input[x1, y1+1]);
+                    output.WriteShort(input[x1+1, y1+1]);
                 }
                 return;
             }
@@ -199,7 +220,7 @@ namespace MushroomsUnity3DExample.utlity
                             //weak x, weak y
                             if (width == 1 || height == 1)
                             {
-                                output.Enqueue(finalQuadDataByte);
+                                output.WriteByte(finalQuadDataByte);
                                 return;
                             }
 
@@ -265,12 +286,12 @@ namespace MushroomsUnity3DExample.utlity
                     }
                     else
                     {
-                        output.Enqueue(finalQuadDataByte);
+                        output.WriteByte(finalQuadDataByte);
                     }
 
                     if (isSimple)
                     {
-                        EnqueueShortAsBytes(output, l_id);
+                        output.WriteShort(l_id);
                     }
                     else
                     {
@@ -377,7 +398,7 @@ namespace MushroomsUnity3DExample.utlity
                 lambda(3);
         }
 
-        public static void CompressBinaryTree(short[] input, Queue<byte> output, short start, short end)
+        public static void CompressBinaryTree(short[] input, ByteWriter output, short start, short end)
         {
             short length = (short)(end - start);
             short middle;
@@ -388,12 +409,12 @@ namespace MushroomsUnity3DExample.utlity
             {
                 if (length == 1)
                 {
-                    EnqueueShortAsBytes(output, input[start]);
+                    output.WriteShort(input[start]);
                 }
                 else if (length == 2)
                 {
-                    EnqueueShortAsBytes(output, input[start]);
-                    EnqueueShortAsBytes(output, input[start+1]);
+                    output.WriteShort(input[start]);
+                    output.WriteShort(input[start+1]);
                 }
                 return;
             }
@@ -416,7 +437,7 @@ namespace MushroomsUnity3DExample.utlity
                     {
                         if (length == 1)
                         {
-                            output.Enqueue(finalBinaryDataByte);
+                            output.WriteByte(finalBinaryDataByte);
                             return;
                         }
                         l_start = start;
@@ -445,12 +466,12 @@ namespace MushroomsUnity3DExample.utlity
                     }
                     else
                     {
-                        output.Enqueue(finalBinaryDataByte);
+                        output.WriteByte(finalBinaryDataByte);
                     }
 
                     if (isSimple)
                     {
-                        EnqueueShortAsBytes(output, l_id);
+                        output.WriteShort(l_id);
                     }
                     else
                     {
@@ -557,15 +578,21 @@ namespace MushroomsUnity3DExample.utlity
             return blockId;
         }
 
-        private static void EnqueueShortAsBytes(Queue<byte> output, short value)
+        /*private static void EnqueueShortAsBytes(ByteWriter output, short value)
         {
-            output.Enqueue((byte)(value >> 8));
-            output.Enqueue((byte)(value & 0xFF));
-        }
+            //output.WriteByteShort(value);
+            //output.Enqueue((byte)(value >> 8));
+            //output.Enqueue((byte)(value & 0xFF));
+        }*/
 
         private static short DequeueShortAsBytes(QueueReader<byte> input)
         {
             return (short)((input.Dequeue() << 8) | input.Dequeue());
+        }
+
+        internal static byte[] CompressWorldBorders(short[,] blocks)
+        {
+            throw new NotImplementedException();
         }
     }
 }

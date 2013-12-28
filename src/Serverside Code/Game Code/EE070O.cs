@@ -145,23 +145,24 @@ namespace MushroomsUnity3DExample
                 switch (args[0])
                 {
                     case "ping":
-                        Broadcast("info", "Pong!");
+                        Broadcast("write", player.name, "Ping!");
+                        Broadcast("write", "System","Pong!");
                         break;
                     case "clear":
                         {
-                            int blockId = 0;
+                            short blockId = 0;
                             if (args.Count() >= 2)
-                                int.TryParse(args[1], out blockId);
+                                short.TryParse(args[1], out blockId);
 
                             this.Fill(blockId);
                         }
                         break;
                     case "borders":
                         {
-                            int blockId = 9;
+                            short blockId = 9;
                             if (args.Count() >= 2)
                             {
-                                int.TryParse(args[1], out blockId);
+                                short.TryParse(args[1], out blockId);
 
                                 if (blockId < 9 || blockId > 15)
                                     blockId = 9;
@@ -236,14 +237,56 @@ namespace MushroomsUnity3DExample
             }
         }
 
-        private void Borders(int blockId)
+        private void Borders(short blockId)
         {
-            throw new NotImplementedException();
+            for (int x = 0; x < width; x++)
+            {
+                blocks[x, 0] = blockId;
+                blocks[x, height - 1] = blockId;
+            }
+
+            for (int y = 1; y < width-1; y++)
+            {
+                blocks[0, y] = blockId;
+                blocks[width-1, y] = blockId;
+            }
+
+            this.ResetBorders();
         }
 
-        private void Fill(int blockId)
+        private void Fill(short blockId)
         {
-            throw new NotImplementedException();
+            for (int y = 1; y < 199; y++)
+            {
+                for (int x = 1; x < 199; x++)
+                {
+                    if (x <= 1 && y <= 1)
+                        blocks[x, y] = 0;
+                    else
+                        blocks[x, y] = (short)this.fillBlock;
+                }
+            }
+
+            this.Reset();//(1, 1, 199, 199);
+        }
+
+        private void Reset()
+        {
+            Pair<bool, byte[]> data = utlity.Compressor.CompressWorld(blocks, (short)width, (short)height);
+
+            Broadcast("reset", data.first, data.second);
+        }
+
+        private void Reset(short x1, short y1, short x2, short y2)
+        {
+            Pair<bool, byte[]> data = utlity.Compressor.CompressArea(blocks, x1, y1, x2, y2);
+
+            Broadcast("reset", data.first, data.second);
+        }
+
+        private void ResetBorders()
+        {
+            byte[] data = utlity.Compressor.CompressWorldBorders(blocks);
         }
 
         public override void GameStarted()
