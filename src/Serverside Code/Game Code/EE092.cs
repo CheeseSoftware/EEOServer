@@ -10,7 +10,7 @@ namespace MushroomsUnity3DExample
     [RoomType("Lobby12")]
     class Lobby12 : Game<Player>
     {
-        Regex regex = new Regex("^[a-zA-Z0-9]*$");
+        Regex regex = new Regex("^[a-z0-9]*$");
 
 
         public override void GameStarted()
